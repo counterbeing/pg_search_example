@@ -4,76 +4,76 @@ Trying to help isolate a potential bug in pg_search. I'm not sure if I'm on the 
 Here's an example of what the error looks like:
 
 -----
-irb(main):007:0> Child.search_by_child("Big")
-   (0.1ms)  SHOW max_identifier_length
-  Child Load (0.4ms)  SELECT "children".*, (ts_rank((to_tsvector('simple', coalesce("children"."name"::text, '')) || to_tsvector('simple', coalesce(pg_search_b0ba784900506496d3fa9e.pg_search_21a8ba70b3e9f30f8e5632::text, ''))), (to_tsquery('simple', ''' ' || 'Big' || ' ''')), 0)) AS pg_search_rank FROM "children" INNER JOIN "parents" "parents_children" ON "parents_children"."id" = "children"."parent_id" LEFT OUTER JOIN (SELECT "children"."id" AS id, string_agg("parents"."name"::text, ' ') AS pg_search_21a8ba70b3e9f30f8e5632 FROM "children" INNER JOIN "parents" ON "parents"."id" = "children"."parent_id" GROUP BY "children"."id") pg_search_b0ba784900506496d3fa9e ON pg_search_b0ba784900506496d3fa9e.id = "children"."id" WHERE (((to_tsvector('simple', coalesce("children"."name"::text, '')) || to_tsvector('simple', coalesce(pg_search_b0ba784900506496d3fa9e.pg_search_21a8ba70b3e9f30f8e5632::text, ''))) @@ (to_tsquery('simple', ''' ' || 'Big' || ' ''')))) ORDER BY parents.name asc, pg_search_rank DESC, "children"."id" ASC
-PG::Error: ERROR:  invalid reference to FROM-clause entry for table "parents"
-LINE 1: ...ry('simple', ''' ' || 'Big' || ' ''')))) ORDER BY parents.na...
-                                                             ^
-HINT:  Perhaps you meant to reference the table alias "parents_children".
-: SELECT "children".*, (ts_rank((to_tsvector('simple', coalesce("children"."name"::text, '')) || to_tsvector('simple', coalesce(pg_search_b0ba784900506496d3fa9e.pg_search_21a8ba70b3e9f30f8e5632::text, ''))), (to_tsquery('simple', ''' ' || 'Big' || ' ''')), 0)) AS pg_search_rank FROM "children" INNER JOIN "parents" "parents_children" ON "parents_children"."id" = "children"."parent_id" LEFT OUTER JOIN (SELECT "children"."id" AS id, string_agg("parents"."name"::text, ' ') AS pg_search_21a8ba70b3e9f30f8e5632 FROM "children" INNER JOIN "parents" ON "parents"."id" = "children"."parent_id" GROUP BY "children"."id") pg_search_b0ba784900506496d3fa9e ON pg_search_b0ba784900506496d3fa9e.id = "children"."id" WHERE (((to_tsvector('simple', coalesce("children"."name"::text, '')) || to_tsvector('simple', coalesce(pg_search_b0ba784900506496d3fa9e.pg_search_21a8ba70b3e9f30f8e5632::text, ''))) @@ (to_tsquery('simple', ''' ' || 'Big' || ' ''')))) ORDER BY parents.name asc, pg_search_rank DESC, "children"."id" ASC
-ActiveRecord::StatementInvalid: PG::Error: ERROR:  invalid reference to FROM-clause entry for table "parents"
-LINE 1: ...ry('simple', ''' ' || 'Big' || ' ''')))) ORDER BY parents.na...
-                                                             ^
-HINT:  Perhaps you meant to reference the table alias "parents_children".
-: SELECT "children".*, (ts_rank((to_tsvector('simple', coalesce("children"."name"::text, '')) || to_tsvector('simple', coalesce(pg_search_b0ba784900506496d3fa9e.pg_search_21a8ba70b3e9f30f8e5632::text, ''))), (to_tsquery('simple', ''' ' || 'Big' || ' ''')), 0)) AS pg_search_rank FROM "children" INNER JOIN "parents" "parents_children" ON "parents_children"."id" = "children"."parent_id" LEFT OUTER JOIN (SELECT "children"."id" AS id, string_agg("parents"."name"::text, ' ') AS pg_search_21a8ba70b3e9f30f8e5632 FROM "children" INNER JOIN "parents" ON "parents"."id" = "children"."parent_id" GROUP BY "children"."id") pg_search_b0ba784900506496d3fa9e ON pg_search_b0ba784900506496d3fa9e.id = "children"."id" WHERE (((to_tsvector('simple', coalesce("children"."name"::text, '')) || to_tsvector('simple', coalesce(pg_search_b0ba784900506496d3fa9e.pg_search_21a8ba70b3e9f30f8e5632::text, ''))) @@ (to_tsquery('simple', ''' ' || 'Big' || ' ''')))) ORDER BY parents.name asc, pg_search_rank DESC, "children"."id" ASC
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/postgresql_adapter.rb:1153:in `async_exec'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/postgresql_adapter.rb:1153:in `exec_no_cache'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/postgresql_adapter.rb:662:in `block in exec_query'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/abstract_adapter.rb:280:in `block in log'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activesupport-3.2.12/lib/active_support/notifications/instrumenter.rb:20:in `instrument'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/abstract_adapter.rb:275:in `log'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/postgresql_adapter.rb:661:in `exec_query'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/postgresql_adapter.rb:1248:in `select'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/abstract/database_statements.rb:18:in `select_all'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/abstract/query_cache.rb:63:in `select_all'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/querying.rb:38:in `block in find_by_sql'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/explain.rb:40:in `logging_query_plan'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/querying.rb:37:in `find_by_sql'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:171:in `exec_queries'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:160:in `block in to_a'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/explain.rb:40:in `logging_query_plan'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:159:in `to_a'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:189:in `exec_queries'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:160:in `block in to_a'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/explain.rb:33:in `logging_query_plan'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:159:in `to_a'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:498:in `inspect'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/railties-3.2.12/lib/rails/commands/console.rb:47:in `start'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/railties-3.2.12/lib/rails/commands/console.rb:8:in `start'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/railties-3.2.12/lib/rails/commands.rb:41:in `<top (required)>'
-  from script/rails:6:in `require'
-irb(main):008:0> 
-HINT:  Perhaps you meant to reference the table alias "parents_children".
-: SELECT "children".*, (ts_rank((to_tsvector('simple', coalesce("children"."name"::text, '')) || to_tsvector('simple', coalesce(pg_search_b0ba784900506496d3fa9e.pg_search_21a8ba70b3e9f30f8e5632::text, ''))), (to_tsquery('simple', ''' ' || 'Big' || ' ''')), 0)) AS pg_search_rank FROM "children" INNER JOIN "parents" "parents_children" ON "parents_children"."id" = "children"."parent_id" LEFT OUTER JOIN (SELECT "children"."id" AS id, string_agg("parents"."name"::text, ' ') AS pg_search_21a8ba70b3e9f30f8e5632 FROM "children" INNER JOIN "parents" ON "parents"."id" = "children"."parent_id" GROUP BY "children"."id") pg_search_b0ba784900506496d3fa9e ON pg_search_b0ba784900506496d3fa9e.id = "children"."id" WHERE (((to_tsvector('simple', coalesce("children"."name"::text, '')) || to_tsvector('simple', coalesce(pg_search_b0ba784900506496d3fa9e.pg_search_21a8ba70b3e9f30f8e5632::text, ''))) @@ (to_tsquery('simple', ''' ' || 'Big' || ' ''')))) ORDER BY parents.name asc, pg_search_rank DESC, "children"."id" ASC
-ActiveRecord::StatementInvalid: PG::Error: ERROR:  invalid reference to FROM-clause entry for table "parents"
-LINE 1: ...ry('simple', ''' ' || 'Big' || ' ''')))) ORDER BY parents.na...
-                                                             ^
-HINT:  Perhaps you meant to reference the table alias "parents_children".
-: SELECT "children".*, (ts_rank((to_tsvector('simple', coalesce("children"."name"::text, '')) || to_tsvector('simple', coalesce(pg_search_b0ba784900506496d3fa9e.pg_search_21a8ba70b3e9f30f8e5632::text, ''))), (to_tsquery('simple', ''' ' || 'Big' || ' ''')), 0)) AS pg_search_rank FROM "children" INNER JOIN "parents" "parents_children" ON "parents_children"."id" = "children"."parent_id" LEFT OUTER JOIN (SELECT "children"."id" AS id, string_agg("parents"."name"::text, ' ') AS pg_search_21a8ba70b3e9f30f8e5632 FROM "children" INNER JOIN "parents" ON "parents"."id" = "children"."parent_id" GROUP BY "children"."id") pg_search_b0ba784900506496d3fa9e ON pg_search_b0ba784900506496d3fa9e.id = "children"."id" WHERE (((to_tsvector('simple', coalesce("children"."name"::text, '')) || to_tsvector('simple', coalesce(pg_search_b0ba784900506496d3fa9e.pg_search_21a8ba70b3e9f30f8e5632::text, ''))) @@ (to_tsquery('simple', ''' ' || 'Big' || ' ''')))) ORDER BY parents.name asc, pg_search_rank DESC, "children"."id" ASC
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/postgresql_adapter.rb:1153:in `async_exec'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/postgresql_adapter.rb:1153:in `exec_no_cache'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/postgresql_adapter.rb:662:in `block in exec_query'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/abstract_adapter.rb:280:in `block in log'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activesupport-3.2.12/lib/active_support/notifications/instrumenter.rb:20:in `instrument'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/abstract_adapter.rb:275:in `log'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/postgresql_adapter.rb:661:in `exec_query'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/postgresql_adapter.rb:1248:in `select'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/abstract/database_statements.rb:18:in `select_all'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/abstract/query_cache.rb:63:in `select_all'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/querying.rb:38:in `block in find_by_sql'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/explain.rb:40:in `logging_query_plan'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/querying.rb:37:in `find_by_sql'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:171:in `exec_queries'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:160:in `block in to_a'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/explain.rb:40:in `logging_query_plan'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:159:in `to_a'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:189:in `exec_queries'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:160:in `block in to_a'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/explain.rb:33:in `logging_query_plan'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:159:in `to_a'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:498:in `inspect'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/railties-3.2.12/lib/rails/commands/console.rb:47:in `start'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/railties-3.2.12/lib/rails/commands/console.rb:8:in `start'
-  from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/railties-3.2.12/lib/rails/commands.rb:41:in `<top (required)>'
-  from script/rails:6:in `require'
+    irb(main):007:0> Child.search_by_child("Big")
+       (0.1ms)  SHOW max_identifier_length
+      Child Load (0.4ms)  SELECT "children".*, (ts_rank((to_tsvector('simple', coalesce("children"."name"::text, '')) || to_tsvector('simple', coalesce(pg_search_b0ba784900506496d3fa9e.pg_search_21a8ba70b3e9f30f8e5632::text, ''))), (to_tsquery('simple', ''' ' || 'Big' || ' ''')), 0)) AS pg_search_rank FROM "children" INNER JOIN "parents" "parents_children" ON "parents_children"."id" = "children"."parent_id" LEFT OUTER JOIN (SELECT "children"."id" AS id, string_agg("parents"."name"::text, ' ') AS pg_search_21a8ba70b3e9f30f8e5632 FROM "children" INNER JOIN "parents" ON "parents"."id" = "children"."parent_id" GROUP BY "children"."id") pg_search_b0ba784900506496d3fa9e ON pg_search_b0ba784900506496d3fa9e.id = "children"."id" WHERE (((to_tsvector('simple', coalesce("children"."name"::text, '')) || to_tsvector('simple', coalesce(pg_search_b0ba784900506496d3fa9e.pg_search_21a8ba70b3e9f30f8e5632::text, ''))) @@ (to_tsquery('simple', ''' ' || 'Big' || ' ''')))) ORDER BY parents.name asc, pg_search_rank DESC, "children"."id" ASC
+    PG::Error: ERROR:  invalid reference to FROM-clause entry for table "parents"
+    LINE 1: ...ry('simple', ''' ' || 'Big' || ' ''')))) ORDER BY parents.na...
+                                                                 ^
+    HINT:  Perhaps you meant to reference the table alias "parents_children".
+    : SELECT "children".*, (ts_rank((to_tsvector('simple', coalesce("children"."name"::text, '')) || to_tsvector('simple', coalesce(pg_search_b0ba784900506496d3fa9e.pg_search_21a8ba70b3e9f30f8e5632::text, ''))), (to_tsquery('simple', ''' ' || 'Big' || ' ''')), 0)) AS pg_search_rank FROM "children" INNER JOIN "parents" "parents_children" ON "parents_children"."id" = "children"."parent_id" LEFT OUTER JOIN (SELECT "children"."id" AS id, string_agg("parents"."name"::text, ' ') AS pg_search_21a8ba70b3e9f30f8e5632 FROM "children" INNER JOIN "parents" ON "parents"."id" = "children"."parent_id" GROUP BY "children"."id") pg_search_b0ba784900506496d3fa9e ON pg_search_b0ba784900506496d3fa9e.id = "children"."id" WHERE (((to_tsvector('simple', coalesce("children"."name"::text, '')) || to_tsvector('simple', coalesce(pg_search_b0ba784900506496d3fa9e.pg_search_21a8ba70b3e9f30f8e5632::text, ''))) @@ (to_tsquery('simple', ''' ' || 'Big' || ' ''')))) ORDER BY parents.name asc, pg_search_rank DESC, "children"."id" ASC
+    ActiveRecord::StatementInvalid: PG::Error: ERROR:  invalid reference to FROM-clause entry for table "parents"
+    LINE 1: ...ry('simple', ''' ' || 'Big' || ' ''')))) ORDER BY parents.na...
+                                                                 ^
+    HINT:  Perhaps you meant to reference the table alias "parents_children".
+    : SELECT "children".*, (ts_rank((to_tsvector('simple', coalesce("children"."name"::text, '')) || to_tsvector('simple', coalesce(pg_search_b0ba784900506496d3fa9e.pg_search_21a8ba70b3e9f30f8e5632::text, ''))), (to_tsquery('simple', ''' ' || 'Big' || ' ''')), 0)) AS pg_search_rank FROM "children" INNER JOIN "parents" "parents_children" ON "parents_children"."id" = "children"."parent_id" LEFT OUTER JOIN (SELECT "children"."id" AS id, string_agg("parents"."name"::text, ' ') AS pg_search_21a8ba70b3e9f30f8e5632 FROM "children" INNER JOIN "parents" ON "parents"."id" = "children"."parent_id" GROUP BY "children"."id") pg_search_b0ba784900506496d3fa9e ON pg_search_b0ba784900506496d3fa9e.id = "children"."id" WHERE (((to_tsvector('simple', coalesce("children"."name"::text, '')) || to_tsvector('simple', coalesce(pg_search_b0ba784900506496d3fa9e.pg_search_21a8ba70b3e9f30f8e5632::text, ''))) @@ (to_tsquery('simple', ''' ' || 'Big' || ' ''')))) ORDER BY parents.name asc, pg_search_rank DESC, "children"."id" ASC
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/postgresql_adapter.rb:1153:in `async_exec'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/postgresql_adapter.rb:1153:in `exec_no_cache'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/postgresql_adapter.rb:662:in `block in exec_query'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/abstract_adapter.rb:280:in `block in log'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activesupport-3.2.12/lib/active_support/notifications/instrumenter.rb:20:in `instrument'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/abstract_adapter.rb:275:in `log'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/postgresql_adapter.rb:661:in `exec_query'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/postgresql_adapter.rb:1248:in `select'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/abstract/database_statements.rb:18:in `select_all'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/abstract/query_cache.rb:63:in `select_all'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/querying.rb:38:in `block in find_by_sql'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/explain.rb:40:in `logging_query_plan'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/querying.rb:37:in `find_by_sql'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:171:in `exec_queries'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:160:in `block in to_a'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/explain.rb:40:in `logging_query_plan'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:159:in `to_a'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:189:in `exec_queries'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:160:in `block in to_a'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/explain.rb:33:in `logging_query_plan'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:159:in `to_a'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:498:in `inspect'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/railties-3.2.12/lib/rails/commands/console.rb:47:in `start'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/railties-3.2.12/lib/rails/commands/console.rb:8:in `start'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/railties-3.2.12/lib/rails/commands.rb:41:in `<top (required)>'
+      from script/rails:6:in `require'
+    irb(main):008:0> 
+    HINT:  Perhaps you meant to reference the table alias "parents_children".
+    : SELECT "children".*, (ts_rank((to_tsvector('simple', coalesce("children"."name"::text, '')) || to_tsvector('simple', coalesce(pg_search_b0ba784900506496d3fa9e.pg_search_21a8ba70b3e9f30f8e5632::text, ''))), (to_tsquery('simple', ''' ' || 'Big' || ' ''')), 0)) AS pg_search_rank FROM "children" INNER JOIN "parents" "parents_children" ON "parents_children"."id" = "children"."parent_id" LEFT OUTER JOIN (SELECT "children"."id" AS id, string_agg("parents"."name"::text, ' ') AS pg_search_21a8ba70b3e9f30f8e5632 FROM "children" INNER JOIN "parents" ON "parents"."id" = "children"."parent_id" GROUP BY "children"."id") pg_search_b0ba784900506496d3fa9e ON pg_search_b0ba784900506496d3fa9e.id = "children"."id" WHERE (((to_tsvector('simple', coalesce("children"."name"::text, '')) || to_tsvector('simple', coalesce(pg_search_b0ba784900506496d3fa9e.pg_search_21a8ba70b3e9f30f8e5632::text, ''))) @@ (to_tsquery('simple', ''' ' || 'Big' || ' ''')))) ORDER BY parents.name asc, pg_search_rank DESC, "children"."id" ASC
+    ActiveRecord::StatementInvalid: PG::Error: ERROR:  invalid reference to FROM-clause entry for table "parents"
+    LINE 1: ...ry('simple', ''' ' || 'Big' || ' ''')))) ORDER BY parents.na...
+                                                                 ^
+    HINT:  Perhaps you meant to reference the table alias "parents_children".
+    : SELECT "children".*, (ts_rank((to_tsvector('simple', coalesce("children"."name"::text, '')) || to_tsvector('simple', coalesce(pg_search_b0ba784900506496d3fa9e.pg_search_21a8ba70b3e9f30f8e5632::text, ''))), (to_tsquery('simple', ''' ' || 'Big' || ' ''')), 0)) AS pg_search_rank FROM "children" INNER JOIN "parents" "parents_children" ON "parents_children"."id" = "children"."parent_id" LEFT OUTER JOIN (SELECT "children"."id" AS id, string_agg("parents"."name"::text, ' ') AS pg_search_21a8ba70b3e9f30f8e5632 FROM "children" INNER JOIN "parents" ON "parents"."id" = "children"."parent_id" GROUP BY "children"."id") pg_search_b0ba784900506496d3fa9e ON pg_search_b0ba784900506496d3fa9e.id = "children"."id" WHERE (((to_tsvector('simple', coalesce("children"."name"::text, '')) || to_tsvector('simple', coalesce(pg_search_b0ba784900506496d3fa9e.pg_search_21a8ba70b3e9f30f8e5632::text, ''))) @@ (to_tsquery('simple', ''' ' || 'Big' || ' ''')))) ORDER BY parents.name asc, pg_search_rank DESC, "children"."id" ASC
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/postgresql_adapter.rb:1153:in `async_exec'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/postgresql_adapter.rb:1153:in `exec_no_cache'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/postgresql_adapter.rb:662:in `block in exec_query'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/abstract_adapter.rb:280:in `block in log'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activesupport-3.2.12/lib/active_support/notifications/instrumenter.rb:20:in `instrument'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/abstract_adapter.rb:275:in `log'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/postgresql_adapter.rb:661:in `exec_query'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/postgresql_adapter.rb:1248:in `select'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/abstract/database_statements.rb:18:in `select_all'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/connection_adapters/abstract/query_cache.rb:63:in `select_all'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/querying.rb:38:in `block in find_by_sql'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/explain.rb:40:in `logging_query_plan'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/querying.rb:37:in `find_by_sql'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:171:in `exec_queries'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:160:in `block in to_a'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/explain.rb:40:in `logging_query_plan'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:159:in `to_a'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:189:in `exec_queries'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:160:in `block in to_a'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/explain.rb:33:in `logging_query_plan'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:159:in `to_a'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/activerecord-3.2.12/lib/active_record/relation.rb:498:in `inspect'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/railties-3.2.12/lib/rails/commands/console.rb:47:in `start'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/railties-3.2.12/lib/rails/commands/console.rb:8:in `start'
+      from /Users/cory/.rbenv/versions/1.9.3-p194/lib/ruby/gems/1.9.1/gems/railties-3.2.12/lib/rails/commands.rb:41:in `<top (required)>'
+      from script/rails:6:in `require'
